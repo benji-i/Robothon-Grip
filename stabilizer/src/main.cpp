@@ -15,14 +15,21 @@ unsigned long last_time = 0;
 #define GAIN    1.0
 
 void setup() {
+    delay(1000);            // wait for serial to stabilize after upload
     Serial.begin(115200);
+
     Wire.begin();
     imu.initialize();
 
+    if (imu.testConnection()) {
+        Serial.println("MPU6050 connected successfully");
+    } else {
+        Serial.println("MPU6050 connection FAILED");
+    }
     servo_x.attach(13);
-    // servo_y.attach(19);
+    servo_y.attach(19);
     servo_x.write(NEUTRAL);
-    // servo_y.write(NEUTRAL);
+    servo_y.write(NEUTRAL);
 
     last_time = millis();   // initialize before loop starts
 }
@@ -30,12 +37,13 @@ void setup() {
 void loop() {
     int16_t raw_ax, raw_ay, raw_az, raw_gx, raw_gy, raw_gz;
     imu.getMotion6(&raw_ax, &raw_ay, &raw_az, &raw_gx, &raw_gy, &raw_gz);
-
-    float ax = raw_ax / 16384.0; Serial.print("AX: "); Serial.println(ax);
-    float ay = raw_ay / 16384.0; Serial.print("AY: "); Serial.println(ay);
-    float az = raw_az / 16384.0; Serial.print("AZ: "); Serial.println(az);
-    float gx = raw_gx / 131.0; Serial.print("GX: "); Serial.println(gx);
-    float gy = raw_gy / 131.0; Serial.print("GY: "); Serial.println(gy);
+    
+    
+    float ax = raw_ax / 16384.0; // Serial.print("AX: "); Serial.println(ax);
+    float ay = raw_ay / 16384.0; // Serial.print("AY: "); Serial.println(ay);
+    float az = raw_az / 16384.0; // Serial.print("AZ: "); Serial.println(az);
+    float gx = raw_gx / 131.0; // Serial.print("GX: "); Serial.println(gx);
+    float gy = raw_gy / 131.0; // Serial.print("GY: "); Serial.println(gy);
 
     unsigned long now = millis();
     float dt = (now - last_time) / 1000.0;
@@ -54,15 +62,12 @@ void loop() {
     int correction_y = constrain(NEUTRAL - (int)(angle_y * GAIN), 0, 180);
 
     servo_x.write(correction_x);
-    // servo_y.write(correction_y);
+    servo_y.write(correction_y);
 
-    /**
-    
     Serial.print("X: "); Serial.print(angle_x);
     Serial.print("  Y: "); Serial.print(angle_y);
     Serial.print("  Servo X: "); Serial.print(correction_x);
     Serial.print("  Servo Y: "); Serial.println(correction_y);
-
-    */
-    delay(10);  // run at roughly 100Hz
+    
+    delay(100);  // run at roughly 100Hz
 }
